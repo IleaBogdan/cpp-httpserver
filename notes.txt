@@ -20,3 +20,6 @@ sudo apt install libmysqlclient-dev
 
 # for more help:
 # https://chat.deepseek.com/a/chat/s/cf35a392-1324-4771-9d52-33a0928014d2
+
+
+# the Crow framework needs to be installed at system lvl. maybe I will make some ifdefs to allow local level but not today

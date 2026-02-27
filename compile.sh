@@ -5,6 +5,19 @@ if [ ! -d "bin" ]; then
     mkdir bin
 fi
 
-g++ -std=c++23 -pthread main.cpp -o ./bin/server
+if [ "$1" == "update" ]; then
+    # echo "we should run the python parser"
+    echo "generating the yaml file..."
+    python3 generate_openapi.py
+    echo "file generated!"
+    echo
+    if [ -f "openapi.yaml" ]; then
+        mv ./openapi.yaml ./static/openapi.yaml
+    fi
+fi
+
+echo "compiling cpp files..."
+g++ -std=c++23 -pthread *.cpp -o ./bin/server
+echo "compilation done!"
 # If using SQLite:
 # g++ -std=c++23 -pthread main.cpp -lsqlite3 -o myapp
