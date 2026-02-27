@@ -1,0 +1,22 @@
+# full crow installation + sqllite libs if the compiled and included version is not working 
+
+# 1. Install dependencies
+sudo apt update
+sudo apt install build-essential cmake git libboost-all-dev libasio-dev
+
+# 2. Clone and build Crow
+git clone https://github.com/CrowCpp/Crow.git
+cd Crow
+mkdir build && cd build
+cmake .. -DCROW_BUILD_EXAMPLES=OFF -DCROW_BUILD_TESTS=OFF
+sudo make install
+sudo ldconfig
+
+# 3. For SQLite (optional, for database work)
+sudo apt install libsqlite3-dev
+
+# 4. For MySQL (optional)
+sudo apt install libmysqlclient-dev
+
+# for more help:
+# https://chat.deepseek.com/a/chat/s/cf35a392-1324-4771-9d52-33a0928014d2
