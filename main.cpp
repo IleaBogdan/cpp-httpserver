@@ -56,16 +56,6 @@ signed main(){
         res.add_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.add_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
     };
-    
-    // Add OPTIONS handler for preflight requests
-    CROW_ROUTE(app, "/<path>").methods("OPTIONS"_method)([](std::string path){
-        crow::response res(200);
-        res.add_header("Access-Control-Allow-Origin", "*");
-        res.add_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        res.add_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        res.add_header("Access-Control-Max-Age", "86400");
-        return res;
-    });
 
     
     int rc=sqlite3_open(DATABASE_PATH.c_str(),&db);
