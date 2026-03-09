@@ -9,3 +9,7 @@
 
 #include "json.hpp"
 using json=nlohmann::json;
+
+const std::string DATABASE_PATH="test.db";
+inline sqlite3* db;
+inline sqlite3_stmt* stmt;

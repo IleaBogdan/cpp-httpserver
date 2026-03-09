@@ -1,9 +1,5 @@
 #include"libs.h"
 
-const std::string DATABASE_PATH="test.db";
-sqlite3* db;
-sqlite3_stmt* stmt;
-
 std::string get_random_number(void){
     std::random_device rd;
     std::mt19937 gen(rd());
