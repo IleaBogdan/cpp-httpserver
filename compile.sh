@@ -19,7 +19,7 @@ fi
 echo "compiling cpp files..."
 SOURCES=$(find . -name "*.cpp" \
     ! -path "./test.cpp" \
-    ! -path "./mailpp/test.cpp" \
+    ! -path "./mail++/test.cpp" \
     ! -path "*/tests/*" \
     ! -path "*/fuzz/*" \
     ! -path "*/examples/*" \
