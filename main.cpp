@@ -70,6 +70,14 @@ json check_user_in_db(std::string name){
 signed main(){
     signed STATUS_CODE=0;
 
+    env_data.load_file();
+
+    // std::cerr<<env_data.get_value("MAIL")<<std::endl;
+    mail.init(env_data.get_value("MAIL"),env_data.get_value("MAIL_PASSWORD"));
+
+    // testing mail:
+    // mail.send_mail("mymail@gmail.com","http server","the c++ http server started");
+
     crow::SimpleApp app;
     // Add CORS to each route instead
     auto add_cors = [](crow::response& res) {

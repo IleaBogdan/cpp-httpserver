@@ -33,7 +33,8 @@ private:
     static std::string base64Encode(const std::string&in);
 public:
     mailpp()=default;
-    mailpp(std::string _from,std::string _password);
+    // mailpp(std::string _from,std::string _password);
+    void init(std::string _from,std::string _password);
     ~mailpp();
     int send_mail(std::string to,std::string subject="",std::string body="");
 };

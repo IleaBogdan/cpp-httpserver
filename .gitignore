@@ -5,3 +5,6 @@ node_modules
 json.hpp
 test
 bin
+.env
+test.cpp
+test_env
