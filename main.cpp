@@ -1,4 +1,10 @@
-#include"libs.h"
+#include"main.h"
+#include <crow.h>
+#include <random>
+#include <sqlite3.h>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 std::string get_random_number(void){
     std::random_device rd;
@@ -79,7 +85,7 @@ signed main(){
         goto RET;
     }
 
-    CROW_ROUTE(app, "/").methods("GET"_method)([](crow::request& req, crow::response& res) {
+    CROW_ROUTE(app, "/swaggerui").methods("GET"_method)([](crow::request& req, crow::response& res) {
         res.redirect("/static/swagger/index.html");
         res.end();
     });

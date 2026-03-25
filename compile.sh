@@ -17,5 +17,14 @@ if [ "$1" == "update" ]; then
 fi
 
 echo "compiling cpp files..."
-g++ -std=c++23 -DLINUX -pthread *.cpp -o ./bin/server -lsqlite3
+SOURCES=$(find . -name "*.cpp" \
+    ! -path "./test.cpp" \
+    ! -path "./mailpp/test.cpp" \
+    ! -path "*/tests/*" \
+    ! -path "*/fuzz/*" \
+    ! -path "*/examples/*" \
+    ! -path "./test/*" \
+    ! -path "*/CMakeFiles/*" \
+    ! -path "*CMakeCXXCompilerId*")
+g++ -std=c++23 -DLINUX -Wall -Wextra -pthread $SOURCES -o ./bin/server -lsqlite3 -lssl -lcrypto
 echo "compilation done!"
