@@ -1,18 +1,12 @@
-#include"main.h"
-#include <crow.h>
-#include <random>
-#include <sqlite3.h>
-#include <string>
-#include <vector>
-#include <algorithm>
+#include<crow.h>
+#include<sqlite3.h>
+#include<string>
+#include<vector>
+#include<algorithm>
 
-std::string get_random_number(void){
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(1, 100);
-    
-    return std::to_string(dis(gen));
-}
+#include"main.h"
+#include"Models/models.h"
+
 json check_user_in_db(int id){
     sqlite3_stmt* stmt;  // Local statement variable
     std::string sql = "SELECT * FROM users WHERE ID = @Id;";
@@ -153,12 +147,7 @@ signed main(){
         res.end();
     });
     
-    CROW_ROUTE(app, "/random").methods("GET"_method)([](crow::request& req, crow::response& res){
-        res.add_header("Access-Control-Allow-Origin", "*");
-        res.body=get_random_number();
-        res.code=200;
-        res.end();
-    });
+    CROW_ROUTE(app, "/random").methods("GET"_method)(M_random::random_number);
     
     app.bindaddr("0.0.0.0").port(6969).multithreaded().run();
     

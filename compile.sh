@@ -5,15 +5,12 @@ if [ ! -d "bin" ]; then
     mkdir bin
 fi
 
-if [ "$1" == "update" ]; then
-    # echo "we should run the python parser"
-    echo "generating the yaml file..."
-    python3 generate_openapi.py
-    echo "file generated!"
-    echo
-    if [ -f "openapi.yaml" ]; then
-        mv ./openapi.yaml ./static/openapi.yaml
-    fi
+echo "generating the yaml file..."
+python3 generate_openapi.py
+echo "file generated!"
+echo
+if [ -f "openapi.yaml" ]; then
+    mv ./openapi.yaml ./static/openapi.yaml
 fi
 
 echo "compiling cpp files..."

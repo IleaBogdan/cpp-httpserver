@@ -6,6 +6,9 @@ import re
 import sys
 from pathlib import Path
 
+SKIP_DIRECTORIES = {"node_modules", "static", "test", "Crow", ".git", "bin"}
+SOURCE_EXTENSIONS = {".cpp", ".cc", ".cxx", ".hpp", ".h"}
+
 def should_exclude_route(route_path):
     """Check if a route should be excluded from OpenAPI documentation."""
     exclude_patterns = [
@@ -13,7 +16,8 @@ def should_exclude_route(route_path):
         r'^/static/swagger/',           # Swagger static files
         r'^/swagger/',                   # Swagger UI routes
         r'^/$',                           # Root route that redirects to Swagger
-        r'^/static/<string>'
+        r'^/static/<string>',
+        r'^/swaggerui',
     ]
     
     for pattern in exclude_patterns:
@@ -73,53 +77,154 @@ def extract_parameters(route_content, route_path):
     
     return params
 
-def find_crow_routes(directory):
-    """Scan all .cpp files in directory for Crow routes and their parameters."""
-    routes = []
-    
-    # Read the entire file content first to handle multiline routes
-    for filepath in Path(directory).glob("*.cpp"):
-        try:
-            with open(filepath, 'r') as f:
-                content = f.read()
-            
-            # Find route declarations with their implementations
-            # This pattern matches CROW_ROUTE with method specification and captures the implementation
-            route_pattern = r'(CROW_ROUTE\s*\([^,]+,\s*"([^"]+)"\s*\)(?:\s*\.methods\s*\(\s*"([^"]+)"_method\s*\))?\s*\(\[\]\s*\([^)]*\)\s*\{([^}]+)\})'
-            
-            for match in re.finditer(route_pattern, content, re.DOTALL):
-                full_match = match.group(1)
-                route = match.group(2)
-                
-                # Skip excluded routes
-                if should_exclude_route(route):
-                    print(f"Excluding route: {route}")
+def should_skip_file(filepath, root_directory, skip_directories):
+    """Check if file should be skipped based on directory names."""
+    try:
+        relative_parts = filepath.relative_to(root_directory).parts
+    except ValueError:
+        # Fallback when paths are not directly comparable.
+        relative_parts = filepath.parts
+    return any(part in skip_directories for part in relative_parts[:-1])
+
+def extract_balanced_brace_content(content, opening_brace_index):
+    """Return content inside a balanced {...} block starting at opening brace."""
+    if opening_brace_index < 0 or opening_brace_index >= len(content):
+        return ""
+    if content[opening_brace_index] != "{":
+        return ""
+
+    depth = 0
+    for index in range(opening_brace_index, len(content)):
+        char = content[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return content[opening_brace_index + 1:index]
+    return ""
+
+def extract_handler_body(handler_name, source_contents):
+    """Find a function body for a route handler name across all scanned files."""
+    candidates = [handler_name]
+    if "::" in handler_name:
+        candidates.append(handler_name.split("::")[-1])
+
+    seen_candidates = set()
+    for candidate in candidates:
+        if candidate in seen_candidates:
+            continue
+        seen_candidates.add(candidate)
+
+        # Match function definitions like:
+        # void random_number(...){ ... }
+        function_pattern = re.compile(
+            rf'\b{re.escape(candidate)}\s*\([^;{{}}]*\)\s*\{{',
+            re.DOTALL
+        )
+        for content in source_contents.values():
+            for match in function_pattern.finditer(content):
+                brace_index = content.find("{", match.start(), match.end() + 1)
+                if brace_index == -1:
                     continue
-                
-                # Determine HTTP method
-                method = match.group(3).lower() if match.group(3) else "get"
-                
-                # Get the route implementation body
-                route_body = match.group(4)
-                
-                # Extract parameters from the route body
-                params = extract_parameters(route_body, route)
-                
-                routes.append({
-                    'path': route,
-                    'method': method,
-                    'file': filepath.name,
-                    'params': params
-                })
-                
-                print(f"Found route: {method} {route} in {filepath.name}")
-                if params['query']:
-                    print(f"  Query params: {params['query']}")
-                if params['body']:
-                    print(f"  Body params: {params['body']}")
-                    
+                body = extract_balanced_brace_content(content, brace_index)
+                if body:
+                    return body
+    return ""
+
+def find_crow_routes(directory, skip_directories=None):
+    """Recursively scan source files for Crow routes and their parameters."""
+    routes = []
+    root_directory = Path(directory).resolve()
+    skip_directories = skip_directories or set()
+
+    source_files = []
+    source_contents = {}
+    for filepath in root_directory.rglob("*"):
+        if filepath.is_file() and filepath.suffix.lower() in SOURCE_EXTENSIONS:
+            if not should_skip_file(filepath, root_directory, skip_directories):
+                source_files.append(filepath)
+
+    for filepath in source_files:
+        try:
+            with open(filepath, "r") as f:
+                source_contents[filepath] = f.read()
         except Exception as e:
             print(f"Error reading {filepath}: {e}", file=sys.stderr)
+
+    route_prefix = (
+        r'CROW_ROUTE\s*\([^,]+,\s*"([^"]+)"\s*\)'
+        r'(?:\s*\.methods\s*\(\s*"([^"]+)"_method\s*\))?\s*'
+    )
+    lambda_route_pattern = re.compile(
+        route_prefix + r'\(\s*\[[^\]]*\]\s*\([^)]*\)\s*\{(.*?)\}\s*\)\s*;',
+        re.DOTALL
+    )
+    handler_route_pattern = re.compile(
+        route_prefix + r'\(\s*([A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)\s*\)\s*;'
+    )
+
+    seen_routes = set()
+    for filepath, content in source_contents.items():
+        for match in lambda_route_pattern.finditer(content):
+            route = match.group(1)
+            method = match.group(2).lower() if match.group(2) else "get"
+            route_body = match.group(3)
+
+            if should_exclude_route(route):
+                print(f"Excluding route: {route}")
+                continue
+
+            route_key = (route, method)
+            if route_key in seen_routes:
+                continue
+            seen_routes.add(route_key)
+
+            params = extract_parameters(route_body, route)
+            route_file = str(filepath.relative_to(root_directory))
+            routes.append({
+                "path": route,
+                "method": method,
+                "file": route_file,
+                "params": params
+            })
+
+            print(f"Found route: {method} {route} in {route_file}")
+            if params["query"]:
+                print(f"  Query params: {params['query']}")
+            if params["body"]:
+                print(f"  Body params: {params['body']}")
+
+        for match in handler_route_pattern.finditer(content):
+            route = match.group(1)
+            method = match.group(2).lower() if match.group(2) else "get"
+            handler_name = match.group(3)
+
+            if should_exclude_route(route):
+                print(f"Excluding route: {route}")
+                continue
+
+            route_key = (route, method)
+            if route_key in seen_routes:
+                continue
+            seen_routes.add(route_key)
+
+            route_body = extract_handler_body(handler_name, source_contents)
+            params = extract_parameters(route_body, route) if route_body else {"query": [], "body": []}
+
+            route_file = str(filepath.relative_to(root_directory))
+            routes.append({
+                "path": route,
+                "method": method,
+                "file": route_file,
+                "params": params
+            })
+
+            print(f"Found route: {method} {route} in {route_file} (handler: {handler_name})")
+            if params["query"]:
+                print(f"  Query params: {params['query']}")
+            if params["body"]:
+                print(f"  Body params: {params['body']}")
     
     return routes
 
@@ -226,24 +331,17 @@ components:
     print(f"Generated {output_file} with {len(routes)} routes")
 
 def main():
-    # Get the script's directory
+    project_root = Path(os.getcwd()).resolve()
+    routes = find_crow_routes(project_root, SKIP_DIRECTORIES)
     script_dir = Path(__file__).parent.absolute()
-    
-    # Output file path
-    output_file = script_dir / "openapi.yaml"
-    
-    # Find all routes with parameters
+    # print(script_dir)
+    output_file = script_dir / "static/openapi.yaml"
     print("Scanning for Crow routes and parameters...")
-    routes = find_crow_routes(script_dir)
-    
+    # routes = find_crow_routes(script_dir)
     if not routes:
         print("No Crow routes found in .cpp files (excluding Swagger UI routes)")
         return
-    
-    # Generate YAML
     generate_openapi_yaml(routes, output_file)
-    
-    # Print found routes with parameters
     print("\nFound routes with parameters (excluding Swagger UI):")
     for route in routes:
         print(f"  {route['method'].upper():<6} {route['path']}")
