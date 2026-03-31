@@ -9,5 +9,5 @@ const std::string DATABASE_PATH="test.db";
 inline sqlite3* db;
 inline sqlite3_stmt* stmt;
 
-env_loader env_data;
-mailpp mail;
+inline env_loader env_data;
+inline mailpp mail;
