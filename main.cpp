@@ -11,14 +11,10 @@ signed main(){
     signed STATUS_CODE=0;
 
     env_data.load_file();
-
-    // std::cerr<<env_data.get_value("MAIL")<<std::endl;
     mail.init(env_data.get_value("MAIL"),env_data.get_value("MAIL_PASSWORD"));
 
-    // testing mail:
-    // mail.send_mail("mymail@gmail.com","http server","the c++ http server started");
-
     crow::SimpleApp app;
+    
     // Add CORS to each route instead
     auto add_cors = [](crow::response& res) {
         res.add_header("Access-Control-Allow-Origin", "*");
@@ -45,7 +41,7 @@ signed main(){
     CROW_ROUTE(app,"/checkName").methods("POST"_method)(M_db_query::checkName);
     CROW_ROUTE(app, "/random").methods("GET"_method)(M_random::random_number);
     
-    app.bindaddr("0.0.0.0").port(6969).multithreaded().run();
+    app.bindaddr("0.0.0.0").port(69420).multithreaded().run();
     
     END_PROCESSES:
     sqlite3_finalize(stmt);
