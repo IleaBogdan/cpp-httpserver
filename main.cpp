@@ -41,7 +41,7 @@ signed main(){
     CROW_ROUTE(app,"/checkName").methods("POST"_method)(M_db_query::checkName);
     CROW_ROUTE(app, "/random").methods("GET"_method)(M_random::random_number);
     
-    app.bindaddr("0.0.0.0").port(69420).multithreaded().run();
+    app.bindaddr("0.0.0.0").port(42069).multithreaded().run(); // aparent portul trebe sa fie un uint16_t value, deci max: 65535
     
     END_PROCESSES:
     sqlite3_finalize(stmt);
