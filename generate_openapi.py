@@ -287,7 +287,7 @@ info:
   description: Auto-generated API documentation with parameter support
   version: 1.0.0
 servers:
-  - url: http://localhost:6969
+  - url: http://localhost:42069
     description: Local server
 paths:
 """
