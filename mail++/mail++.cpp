@@ -1,6 +1,6 @@
 #include"mail++.h"
 
-#ifndef LINUX
+#ifdef LINUX
 void mailpp::init(std::string _from,std::string _password){
     if(_from==""||_from.empty()||_password==""||_password.empty()){
         throw("Invalid Credentials in Constructor");
