@@ -18,6 +18,8 @@ def should_exclude_route(route_path):
         r'^/$',                           # Root route that redirects to Swagger
         r'^/static/<string>',
         r'^/swaggerui',
+        r'crow_all.h',
+        r'^/vcpkg/',
     ]
     
     for pattern in exclude_patterns:

@@ -1,6 +1,10 @@
 #pragma once
 #include<string>
+#ifdef LINUX
 #include<crow.h>
+#else
+#include"../crow_all.h"
+#endif
 
 #include"../main.h"
 #include"../vars.h"

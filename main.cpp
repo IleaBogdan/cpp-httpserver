@@ -1,4 +1,8 @@
+#ifdef LINUX
 #include<crow.h>
+#else
+#include"crow_all.h"
+#endif
 #include<sqlite3.h>
 #include<string>
 #include<vector>

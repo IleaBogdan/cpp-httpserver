@@ -8,3 +8,5 @@ bin
 .env
 test.cpp
 test_env
+*.obj
+vcpkg
