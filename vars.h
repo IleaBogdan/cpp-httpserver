@@ -2,7 +2,9 @@
 #include <sqlite3.h>
 #include <string>
 
-#include"mail++/mail++.h"
+#ifdef LINUX
+    #include"mail++/mail++.h"
+#endif
 #include"env.h"
 
 // note to self and to Luca:
@@ -15,4 +17,7 @@ inline sqlite3* db;
 inline sqlite3_stmt* stmt;
 
 inline env_loader env_data;
-inline mailpp mail;
+
+#ifdef LINUX
+    inline mailpp mail;
+#endif

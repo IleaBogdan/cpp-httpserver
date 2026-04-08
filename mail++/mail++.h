@@ -1,4 +1,5 @@
 #pragma once
+#ifdef LINUX
 #include<iostream>
 #include<string>
 #include<cstring>
@@ -38,3 +39,4 @@ public:
     ~mailpp();
     int send_mail(std::string to,std::string subject="",std::string body="");
 };
+#endif

@@ -11,7 +11,9 @@ signed main(){
     signed STATUS_CODE=0;
 
     env_data.load_file();
+#ifdef LINUX
     mail.init(env_data.get_value("MAIL"),env_data.get_value("MAIL_PASSWORD"));
+#endif
 
     crow::SimpleApp app;
     

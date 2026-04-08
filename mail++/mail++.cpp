@@ -1,5 +1,6 @@
 #include"mail++.h"
 
+#ifndef LINUX
 void mailpp::init(std::string _from,std::string _password){
     if(_from==""||_from.empty()||_password==""||_password.empty()){
         throw("Invalid Credentials in Constructor");
@@ -266,7 +267,6 @@ std::string mailpp::base64Encode(const std::string&in){
 //         _password.end()
 //     );
 //     this->password=_password;
-    
 //     // smtp connection init
 //     this->server=gethostbyname("smtp.gmail.com");
 //     if(this->server==nullptr){
@@ -347,3 +347,4 @@ std::string mailpp::base64Encode(const std::string&in){
 //         return;
 //     }
 // }
+#endif
